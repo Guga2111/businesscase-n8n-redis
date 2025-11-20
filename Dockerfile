@@ -1,7 +1,5 @@
 FROM n8nio/n8n:latest
 
-WORKDIR /home/node/.n8n
-
 # Copiar workflows
 COPY n8n/workflows /workflows
 
@@ -14,9 +12,10 @@ ENV N8N_WORKFLOWS_FOLDER=/workflows
 ENV N8N_CORS_ENABLED=true
 ENV N8N_CORS_ORIGIN=*
 ENV N8N_METRICS=true
+ENV N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
 
 # Expor porta
 EXPOSE 5678
 
-# Comando padrão
-CMD ["n8n", "start"]
+# Usar o entrypoint padrão da imagem n8n
+CMD ["/bin/sh", "-c", "n8n"]
