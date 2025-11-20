@@ -1,0 +1,110 @@
+{
+  "name": "Logs Flow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "registrar-log",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d5e2b0a7-b67d-420d-a68a-bd918ab25eb5",
+      "name": "Webhook",
+      "webhookId": "f8f16e0e-2a3f-4514-9e86-170d9af4b70f"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7b234cd4-4532-49ef-820d-083eb49c31a5",
+              "name": "log_timestamp",
+              "value": "={{ $now }}",
+              "type": "string"
+            },
+            {
+              "id": "30229cd8-607a-4ee6-bc10-75c04ae7a05e",
+              "name": "sessionId",
+              "value": "={{ $json.body.sessionId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "de16bdfb-a6fa-4d48-b950-f197c0a2700e",
+      "name": "Add log metadata"
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "=log:{{ $json.sessionId }}:{{ new Date($json.log_timestamp).getTime() }}\n",
+        "value": "={{ JSON.stringify($json) }}",
+        "expire": true,
+        "ttl": 432000
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "b45ce362-5e56-4a36-bcfa-085a0b28f9ba",
+      "name": "Redis",
+      "credentials": {
+        "redis": {
+          "id": "wb7teCLx0cJygs7C",
+          "name": "Redis account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Add log metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add log metadata": {
+      "main": [
+        [
+          {
+            "node": "Redis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a11bb748-5bd5-40e5-a105-532d599e2143",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5576f8658144d927e9db95b1d92cb09570b444ab6ed310e6a1fa939b917c4013"
+  },
+  "id": "CbVxa1BXpgyAXKfx",
+  "tags": []
+}

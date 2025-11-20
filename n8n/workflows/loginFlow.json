@@ -1,0 +1,189 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"isAccessKeyValid\": true\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        -48
+      ],
+      "name": "Respond OK (200)",
+      "id": "f80b8648-3f82-4a54-b54a-c0e944d91bec"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"isAccessKeyValid\": false\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        208
+      ],
+      "name": "Respond 401 (Unauthorized)",
+      "id": "51cb0a03-9e35-4fab-9519-c7d84d70ffd2"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "login",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -992,
+        112
+      ],
+      "id": "93d33c65-1352-4529-bbab-764125bcab5e",
+      "name": "Webhook",
+      "webhookId": "0356a691-3a47-414c-8e82-06be493e95d2",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "acesso",
+        "key": "={{ $json.body.email }}",
+        "keyType": "string",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -704,
+        112
+      ],
+      "id": "4a9266ed-358f-4d23-a289-a5f77cb02ac0",
+      "name": "Redis",
+      "credentials": {
+        "redis": {
+          "id": "M3DtzNe7LLLXzOoq",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "697e4c59-adb4-43a8-a956-945c83d43d19",
+              "leftValue": "={{ $json.acesso }}",
+              "rightValue": "={\"access-key\":\"{{ $('Webhook').item.json.body.identifier }}\"}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -416,
+        112
+      ],
+      "name": "Autorizado?",
+      "id": "078f090a-9dfd-43a7-a61f-9665f2310359"
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ \"chat:\" + $('Webhook').item.json.body.email }}",
+        "value": "={\n  \"messages\": [],\n  \"collected_data\": {}\n}",
+        "expire": true,
+        "ttl": 36000000
+      },
+      "id": "97ab1707-c841-4db3-bbaa-5f4abc5893cd",
+      "name": "Redis Set Session",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -224,
+        -48
+      ],
+      "credentials": {
+        "redis": {
+          "id": "M3DtzNe7LLLXzOoq",
+          "name": "Redis account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Redis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis": {
+      "main": [
+        [
+          {
+            "node": "Autorizado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Autorizado?": {
+      "main": [
+        [
+          {
+            "node": "Redis Set Session",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond 401 (Unauthorized)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Set Session": {
+      "main": [
+        [
+          {
+            "node": "Respond OK (200)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "81ba944ac1e7c5de6f553e387cbe193e89cfad3c1e08428a664aa51a90567403"
+  }
+}

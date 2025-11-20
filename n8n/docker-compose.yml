@@ -1,0 +1,34 @@
+version: '3.7'
+
+services:
+  n8n:
+    image: n8nio/n8n
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=localhost 
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=development
+      - TZ=America/Recife 
+      - REDIS_URL=redis://redis:6379
+      - N8N_WORKFLOWS_FOLDER=/workflows
+      - N8N_CORS_ENABLED=true
+      - N8N_CORS_ORIGIN=*
+      - WEBHOOK_URL=http://localhost:5678/
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./workflows:/workflows
+
+  redis:
+    image: redis:alpine
+    restart: always
+    volumes:
+      - redis_data:/data
+    ports:
+    - "6380:6379"
+
+volumes:
+  n8n_data:
+  redis_data:

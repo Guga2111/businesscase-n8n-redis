@@ -1,0 +1,95 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const perguntas = [\n  { key: \"nome_empresa\", texto: \"Qual é o nome da empresa?\" },\n  { key: \"setor\", texto: \"Qual é o setor da empresa?\" },\n  { key: \"tamanho\", texto: \"Qual é o tamanho da empresa?\" },\n  { key: \"problema_atual\", texto: \"Qual é o problema atual que a empresa enfrenta?\" },\n  { key: \"resultado_esperado\", texto: \"Qual é o resultado que você espera alcançar?\" }\n];\n\n// Redis output is stored in \"value\"\nlet raw = $input.first().json.propertyName;\n\n// If nothing returned from Redis → no session found\nif (!raw) {\n  return [{ json: { finished: true } }];\n}\n\n// Parse raw JSON if needed\nlet session;\ntry {\n  session = typeof raw === \"string\" ? JSON.parse(raw) : raw;\n} catch (e) {\n  return [{ json: { finished: true } }];\n}\n\nsession.collected_data = session.collected_data || {};\n\nconst dados = session.collected_data;\n\n// Find next unanswered question\nconst prox = perguntas.find(p => !dados[p.key]);\n\nif (!prox) {\n  return [{ json: { finished: true } }];\n}\n\n// Return next question\nreturn [\n  {\n    json: {\n      finished: false,\n      nextKey: prox.key,\n      nextQuestion: prox.texto\n    }\n  }\n];\n"
+      },
+      "id": "1ad188bf-bb06-41de-a6ad-2d84843f61c4",
+      "name": "Decide próxima pergunta1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        592,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "={{ \"chat:\" + ($json.email || $json.email) }}",
+        "options": {}
+      },
+      "id": "29b91078-30c5-4f55-9aa8-67b76095dc4f",
+      "name": "Redis Get Session1",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        288,
+        0
+      ],
+      "credentials": {
+        "redis": {
+          "id": "M3DtzNe7LLLXzOoq",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "messages",
+              "type": "array"
+            },
+            {
+              "name": "collected_data",
+              "type": "array"
+            },
+            {
+              "name": "email"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "7a925ef3-0305-45be-8c95-13cb25addaad",
+      "name": "When Executed by Another Workflow",
+      "alwaysOutputData": true
+    }
+  ],
+  "connections": {
+    "Redis Get Session1": {
+      "main": [
+        [
+          {
+            "node": "Decide próxima pergunta1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Redis Get Session1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "81ba944ac1e7c5de6f553e387cbe193e89cfad3c1e08428a664aa51a90567403"
+  }
+}

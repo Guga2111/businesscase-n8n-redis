@@ -1,0 +1,7 @@
+# Docker volumes data
+n8n_data/
+redis_data/
+
+# System files
+.DS_Store
+Thumbs.db
