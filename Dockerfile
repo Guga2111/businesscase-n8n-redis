@@ -16,6 +16,3 @@ ENV N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
 
 # Expor porta
 EXPOSE 5678
-
-# Usar o entrypoint padrão da imagem n8n
-CMD ["/bin/sh", "-c", "n8n"]
