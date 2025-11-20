@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    restart: unless-stopped
+    ports:
+      - "${N8N_PORT:-5678}:5678"
+    environment:
+      - N8N_HOST=${N8N_HOST:-localhost}
+      - N8N_PORT=${N8N_PORT:-5678}
+      - N8N_PROTOCOL=${N8N_PROTOCOL:-http}
+      - NODE_ENV=${NODE_ENV:-development}
+      - TZ=${TZ:-UTC}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      - N8N_WORKFLOWS_FOLDER=/workflows
+      - N8N_CORS_ENABLED=true
+      - N8N_CORS_ORIGIN=*
+      - WEBHOOK_URL=${WEBHOOK_URL:-http://localhost:5678/}
+      - N8N_METRICS=true
+      - N8N_LOG_LEVEL=${N8N_LOG_LEVEL:-info}
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n/workflows:/workflows:ro
+    depends_on:
+      - redis
+    networks:
+      - n8n_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5678/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6380}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - n8n_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    command: redis-server --appendonly yes
+
+volumes:
+  n8n_data:
+  redis_data:
+
+networks:
+  n8n_network:
+    driver: bridge
